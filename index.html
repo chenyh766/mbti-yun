@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>喵星人 MBTI 本命测试 - 全栈AI版</title>
+    <style>
+        /* 蓝天渐变背景 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Microsoft YaHei';
+            background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* 飘动的云朵动画设计 */
+        .sky-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .cloud {
+            position: absolute;
+            font-size: 4em;
+            opacity: 0.8;
+            animation: floatCloud linear infinite;
+        }
+        .cloud:nth-child(1) { top: 20px; left: -10%; animation-duration: 25s; }
+        .cloud:nth-child(2) { top: 60px; left: -20%; animation-duration: 35s; font-size: 5em; opacity: 0.6; }
+        .cloud:nth-child(3) { top: 10px; left: -30%; animation-duration: 30s; font-size: 3.5em; }
+        .cloud:nth-child(4) { top: 80px; left: -15%; animation-duration: 40s; font-size: 4.5em; opacity: 0.7; }
+
+        @keyframes floatCloud {
+            from { transform: translateX(-10vw); }
+            to { transform: translateX(110vw); }
+        }
+
+        /* 主体容器增加圆润感 */
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff8a65;
+            margin-bottom: 5px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7986cb;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        /* 题目卡片样式 */
+        .question-block {
+            background: #fff;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border: 2px solid #fff3e0;
+            transition: transform 0.2s;
+        }
+        .question-block:hover {
+            transform: translateY(-2px);
+            border-color: #ffe0b2;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.15em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 猫咪表情打分系统 */
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 5px;
+        }
+        .radio-label input[type="radio"] {
+            display: none;
+        }
+        .cat-emoji {
+            font-size: 2.5em;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: grayscale(100%) opacity(0.4);
+        }
+        .score-text {
+            font-size: 0.75em;
+            color: #999;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        /* 选中时的动画和颜色高亮 */
+        .radio-label input[type="radio"]:checked + .cat-emoji {
+            transform: scale(1.4) translateY(-5px);
+            filter: grayscale(0%) opacity(1);
+            text-shadow: 0 5px 15px rgba(255, 154, 85, 0.4);
+        }
+        .radio-label input[type="radio"]:checked ~ .score-text {
+            color: #ff8a65;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff9a55, #ff7043);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 30px;
+            box-shadow: 0 6px 15px rgba(255, 112, 67, 0.3);
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 112, 67, 0.4);
+        }
+
+        /* 结果区域样式 */
+        #result-section {
+            display: none;
+            margin-top: 40px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        .mbti-header {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-radius: 16px;
+            border: 2px dashed #ff9a55;
+            margin-bottom: 25px;
+        }
+        .mbti-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e8853f;
+            margin-bottom: 10px;
+        }
+        .mbti-desc {
+            font-size: 0.95em;
+            color: #555;
+            text-align: left;
+            padding: 0 10px;
+        }
+        .cat-card {
+            background: #fff;
+            border-left: 6px solid #ff9a55;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .cat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 8px;
+        }
+        .cat-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #d84315;
+        }
+        .stars { color: #f39c12; font-size: 1.1em; }
+        .cat-trait, .match-reason {
+            font-size: 0.9em;
+            color: #444;
+            margin-bottom: 5px;
+        }
+        .tag {
+            display: inline-block;
+            background: #ffe0b2;
+            color: #e65100;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+
+        /* 登录框样式 */
+        .login-box {
+            background:#fff; 
+            padding:40px; 
+            border-radius:24px; 
+            box-shadow:0 10px 30px rgba(0,0,0,0.1); 
+            text-align:center; 
+            width: 100%;
+            max-width: 320px; 
+            border: 2px solid #ff9a55;
+        }
+        .login-input {
+            width: calc(100% - 24px); 
+            padding: 12px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .login-btn {
+            padding:12px 25px; 
+            border:none; 
+            border-radius:8px; 
+            cursor:pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: opacity 0.2s;
+        }
+        .login-btn:hover { opacity: 0.8; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 500px) {
+            .cat-emoji { font-size: 2em; }
+            .score-text { font-size: 0.65em; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(5px);">
+    <div class="login-box">
+        <h2 style="color:#ff8a65; margin-bottom:20px;">身份验证 🐾</h2>
+        <p style="color:#777; font-size:0.9em; margin-bottom: 20px;">请先登录，解锁你的AI灵魂解析</p>
+        <input type="text" id="username" class="login-input" placeholder="输入铲屎官代号">
+        <input type="password" id="password" class="login-input" placeholder="输入密码">
+        <div style="display:flex; gap:10px; justify-content:center; margin-top: 10px;">
+            <button class="login-btn" onclick="handleAuth('login')" style="background:#ff9a55; color:#fff; flex: 1;">登录</button>
+            <button class="login-btn" onclick="handleAuth('register')" style="background:#7986cb; color:#fff; flex: 1;">注册</button>
+        </div>
+    </div>
+</div>
+
+<div class="sky-container">
+    <div class="cloud">☁️</div>
+    <div class="cloud">☁️</div>
+    <div class="cloud">☁️</div>
+    <div class="cloud">☁️</div>
+</div>
+
+<div class="container">
+    <h1>🐾 喵星人 MBTI 测试 🐾</h1>
+    <p class="subtitle" id="welcome-subtitle">点击小猫咪表情，测测你的灵魂伴侣是哪种喵~</p>
+
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+        <button type="button" class="btn-submit" onclick="calculateResult()">✨ 召唤我的本命猫咪 ✨</button>
+    </form>
+
+    <div id="result-section">
+        <div class="mbti-header">
+            <div class="mbti-title" id="mbti-result">你的类型: ---</div>
+            <div class="mbti-desc" id="mbti-desc">正在生成性格解析...</div>
+        </div>
+        <h3 style="color: #7986cb; text-align: center; margin-bottom: 20px;">🐈 你的专属猫咪档案 🐈</h3>
+        <div id="cats-container"></div>
+    </div>
+</div>
+
+<script>
+    // --- 登录与认证逻辑 ---
+    let currentUser = null;
+
+    async function handleAuth(action) {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        if(!user || !pass) {
+            alert("请填写账号和密码喵！🐾");
+            return;
+        }
+
+        try {
+            // 注意：这里需要你的 Node.js 后端在运行
+            const res = await fetch(`/${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            const data = await res.json();
+            
+            if(data.success) {
+                if(action === 'login') {
+                    currentUser = user;
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('welcome-subtitle').innerText = `欢迎回来，铲屎官 ${user}！请开始你的测试~`;
+                } else {
+                    alert("注册成功！现在请点击左侧的【登录】按钮喵~ 🐱");
+                }
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("后端服务似乎没有启动哦，请确保 Node.js 运行在 云 端口喵~");
+        }
+    }
+
+    // --- AI 分析调用逻辑 ---
+    async function getAIAnalysis(mbti, catBreed) {
+        const aiDescElement = document.getElementById('mbti-desc');
+        aiDescElement.innerText = "✨ AI 喵星长正在连线中，正在为你生成独一无二的灵魂解析...";
+        
+        try {
+            const res = await fetch('/api/ai-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mbti: mbti, catBreed: catBreed })
+            });
+            const data = await res.json();
+            if(data.success) {
+                aiDescElement.innerText = data.analysis;
+            } else {
+                aiDescElement.innerText = "AI 喵星长打盹了，请稍后再试喵~";
+            }
+        } catch (e) {
+            aiDescElement.innerText = "网络似乎有点问题，AI 信号断开啦，显示基础解析喵~";
+        }
+    }
+
+    // --- 原有题目配置与逻辑 ---
+    const questions = [
+        { id: 'q1', text: '休息日我更喜欢参加热闹的聚会或外出活动，而不是一个人待在家里。', traitPos: 'E', traitNeg: 'I' },
+        { id: 'q2', text: '在陌生的社交场合中，我通常能主动开启话题，而不是被动等待别人搭话。', traitPos: 'E', traitNeg: 'I' },
+        { id: 'q3', text: '高强度工作后，我更倾向于通过与人交流来恢复精力，而不是独自静一静。', traitPos: 'E', traitNeg: 'I' },
+        { id: 'q4', text: '学习新事物时，我更看重具体的步骤和实用性，而不是背后的抽象概念。', traitPos: 'S', traitNeg: 'N' },
+        { id: 'q5', text: '我更倾向于关注当下实际发生的事情，而不是天马行空地幻想未来。', traitPos: 'S', traitNeg: 'N' },
+        { id: 'q6', text: '我喜欢有明确标准和常规可以遵循的任务，而不是开放性、无边界的任务。', traitPos: 'S', traitNeg: 'N' },
+        { id: 'q7', text: '朋友诉苦时，我的第一反应是帮ta理智分析问题，而不是优先安抚情绪。', traitPos: 'T', traitNeg: 'F' },
+        { id: 'q8', text: '在做重要决定时，我认为逻辑和客观事实比个人情感和他人感受更重要。', traitPos: 'T', traitNeg: 'F' },
+        { id: 'q9', text: '去旅行前，我一定会提前做好详细的攻略，不喜欢“走到哪算哪”。', traitPos: 'J', traitNeg: 'P' },
+        { id: 'q10', text: '我的工作和生活环境通常井井有条，不喜欢在混乱或完全随机的状态下做事。', traitPos: 'J', traitNeg: 'P' }
+    ];
+
+    const questionIcons = ['🐱', '😸', '😹', '😻', '😼', '😽', '🙀', '🐾', '🐈', '🦁'];
+
+    const scaleConfig = [
+        { value: 1, emoji: '😾', label: '达咩' },
+        { value: 2, emoji: '😿', label: '不太行' },
+        { value: 3, emoji: '🐱', label: '一般般' },
+        { value: 4, emoji: '😸', label: '有点对' },
+        { value: 5, emoji: '😻', label: '超赞同' }
+    ];
+
+    const catDatabase = {
+        "INTJ": { mbti_desc: "【战略家】独立思考、逻辑极强、擅长长期规划、理性冷静、不喜无效社交。", cats: [ { breed: "俄罗斯蓝猫", stars: "⭐⭐⭐⭐⭐", personality: "高冷优雅，极其安静。", reason: "天作之合。互不打扰又能在精神上互相陪伴，它绝对尊重你的私人空间。" }, { breed: "无毛猫 (斯芬克斯)", stars: "⭐⭐⭐⭐", personality: "外星人般的智慧，不掉毛。", reason: "省去了打理毛发的低效时间，它的高智商也能勉强跟上你的思维跳跃。" } ] },
+        "INTP": { mbti_desc: "【逻辑学家】理性抽象、好奇心强、擅长思辨、不喜繁琐、随性散漫。", cats: [ { breed: "无毛猫 (斯芬克斯)", stars: "⭐⭐⭐⭐⭐", personality: "奇特且聪明，像个冷静的观察者。", reason: "你们可以并排坐着，一起用看透一切的眼神默默打量这个愚蠢的人类世界。" }, { breed: "奶牛猫", stars: "⭐⭐⭐", personality: "猫中哈士奇，极度神经质。", reason: "互补挑战款！你太闷了，需要一只不按套路出牌的“神经病”猫咪来打破你的逻辑，激发你的灵感。" } ] },
+        "ENTJ": { mbti_desc: "【指挥官】强势果断、天生领袖、擅长统筹、执行力强、目标明确。", cats: [ { breed: "阿比西尼亚猫", stars: "⭐⭐⭐⭐⭐", personality: "猫中之犬，极其聪明，领地意识强。", reason: "它有着和你一样不服输的王者气场，能跟上你快节奏、充满挑战性的生活。" }, { breed: "缅因猫", stars: "⭐⭐⭐⭐", personality: "体型庞大的温柔巨人。", reason: "强强联手！带出去绝对拉风，符合你对“顶级配置”的追求，但私下里它又很听你的话。" } ] },
+        "ENTP": { mbti_desc: "【辩论家】口才好、反应快、喜欢辩论、创新力强、不喜墨守成规。", cats: [ { breed: "暹罗猫", stars: "⭐⭐⭐⭐⭐", personality: "极其话痨，嗓门大，好奇心爆棚。", reason: "你们在一起永远有跨物种的激情辩论，它绝对能接住你的每一个奇思妙想，绝不冷场。" }, { breed: "大橘猫", stars: "⭐⭐⭐", personality: "随性慵懒，干饭第一。", reason: "挑战款。当你滔滔不绝讲大道理时，它只会“喵”一声要吃的，专治你的各种胡思乱想。" } ] },
+        "INFJ": { mbti_desc: "【提倡者】直觉敏锐、共情力强、有远见、追求内在价值、精神世界丰富。", cats: [ { breed: "布偶猫", stars: "⭐⭐⭐⭐⭐", personality: "极致温柔，痛感低，极其黏人。", reason: "当你陷入精神内耗或对世界感到失望时，布偶猫毫无保留的爱是最好的治愈神药。" }, { breed: "孟买猫 (黑猫)", stars: "⭐⭐⭐⭐", personality: "神秘优雅，如同暗夜精灵。", reason: "它神秘的气质与你深邃的内心完美共鸣，你们是彼此最忠诚的灵魂伴侣。" } ] },
+        "INFP": { mbti_desc: "【调停者】共情极强、善良柔软、有创造力、敏感、重视自我认同。", cats: [ { breed: "金吉拉", stars: "⭐⭐⭐⭐⭐", personality: "甜美安静，气质忧郁，动作优雅。", reason: "你们可以在静谧的午后一起放空做梦，它是你完美的情绪避风港。" }, { breed: "德文卷毛猫", stars: "⭐⭐⭐⭐", personality: "像小精灵一样古灵精怪，极度活泼亲人。", reason: "互补款。用它的热情和黏人，把你从过度封闭的内心小宇宙里生拉硬拽出来，感受快乐。" } ] },
+        "ENFJ": { mbti_desc: "【教育家】共情力极强、善于引导、有魅力、重视关系、理想主义。", cats: [ { breed: "金渐层", stars: "⭐⭐⭐⭐⭐", personality: "性格极好，脾气温和，是个圆滚滚的甜妹/暖男。", reason: "它外向亲人的性格和你完美契合，你们两个简直是家庭里的双重温暖发射器。" }, { breed: "布偶猫", stars: "⭐⭐⭐⭐", personality: "需要极高的陪伴和呵护。", reason: "极度满足你“想要照顾别人、散发母性/父性光辉”的心理需求。" } ] },
+        "ENFP": { mbti_desc: "【追梦人】脑洞大、共情强、乐观积极、社交轻松、讨厌被限制。", cats: [ { breed: "大橘猫", stars: "⭐⭐⭐⭐⭐", personality: "心宽体胖，大大咧咧，没心没肺。", reason: "你们能一起毫无压力地享受简单快乐的生活，它是你疯玩之后最踏实的依靠。" }, { breed: "奶牛猫", stars: "⭐⭐⭐⭐", personality: "精力旺盛，行为迷惑的搞笑女/男。", reason: "两个活宝凑在一起，每天家里都会上演鸡飞狗跳的爆笑喜剧，绝对符合你追求乐趣的准则。" } ] },
+        "ISTJ": { mbti_desc: "【检查员】严谨可靠、注重细节、执行力强、遵守承诺、不喜变动。", cats: [ { breed: "英国短毛猫 (英短)", stars: "⭐⭐⭐⭐⭐", personality: "沉稳、不吵闹、适应力强。", reason: "它像你一样踏实可靠，是家里最让人省心、低调的陪伴者，绝不打乱你的生活秩序。" }, { breed: "狸花猫", stars: "⭐⭐⭐⭐", personality: "独立机敏，身体素质极好，不娇气。", reason: "好养活且实用主义的代表。你提供规律的生活，它负责默默守护家里。" } ] },
+        "ISFJ": { mbti_desc: "【守护者】体贴周到、有耐心、顾家、敏感细腻、不善拒绝。", cats: [ { breed: "苏格兰折耳猫", stars: "⭐⭐⭐⭐⭐", personality: "脾气极其温顺，性格软糯。", reason: "它柔弱且需要呵护的特质，能够极大满足你照顾他人的天性，你们会互相给予最深沉的陪伴。" }, { breed: "美国短毛猫 (美短)", stars: "⭐⭐⭐⭐", personality: "性格开朗，脾气好，对家庭极其忠诚。", reason: "聪明懂事，不会给你惹麻烦，能给你带来平稳温馨的家庭氛围。" } ] },
+        "ESTJ": { mbti_desc: "【管理者】强势直接、责任心强、讲规则、执行力强、目标明确。", cats: [ { breed: "美国短毛猫 (美短)", stars: "⭐⭐⭐⭐⭐", personality: "皮实好养，身体强壮，性格稳定。", reason: "完全符合你务实、高效、不娇气的准则，它是你高效率生活中的完美挂件。" }, { breed: "暹罗猫", stars: "⭐⭐⭐", personality: "性格倔强，爱顶嘴。", reason: "挑战款。你喜欢发号施令？暹罗会当面跟你对着干，专门挑战你的控制欲！" } ] },
+        "ESFJ": { mbti_desc: "【执政官】温暖友善、善于照顾人、重视群体、责任感强、在意他人评价。", cats: [ { breed: "异国短毛猫 (加菲猫)", stars: "⭐⭐⭐⭐⭐", personality: "慵懒黏人，性格极佳，任人摆布。", reason: "脾气好到爆，极其适合家庭生活，能够让你毫无保留地倾泻你的爱意。" }, { breed: "矮脚猫 (曼基康)", stars: "⭐⭐⭐⭐", personality: "底盘低，走起路来摇摇晃晃，可爱到犯规。", reason: "它能立刻激发所有客人的惊叹，满足你向朋友炫耀温馨家庭的小心思。" } ] },
+        "ISTP": { mbti_desc: "【手艺人】冷静客观、擅长实操、适应力强、随性低调、不喜束缚。", cats: [ { breed: "缅因猫", stars: "⭐⭐⭐⭐⭐", personality: "外表霸气内心温柔，独立且有探索精神。", reason: "你们可以像哥们儿一样相处，它不会过度依赖你，懂得给彼此留空间。" }, { breed: "豹猫", stars: "⭐⭐⭐⭐", personality: "狂野不羁，运动能力极强。", reason: "充满野性美感与活力，完美契合你的硬核审美与自由灵魂。" } ] },
+        "ISFP": { mbti_desc: "【艺术家】审美佳、真诚随性、注重感受、不喜冲突、热爱自由。", cats: [ { breed: "矮脚猫 (曼基康)", stars: "⭐⭐⭐⭐⭐", personality: "萌态可掬，性格温和亲人。", reason: "自带艺术感，瞬间击中你的内心，是陪伴你画画、听音乐的最佳静音伴侣。" }, { breed: "异国短毛猫 (加菲猫)", stars: "⭐⭐⭐⭐", personality: "慵懒随性，不争不抢。", reason: "你们可以一起躺平，享受随遇而安、毫无压力的慢节奏生活。" } ] },
+        "ESTP": { mbti_desc: "【企业家】社交轻松、大胆直接、反应快、爱玩、不喜规划。", cats: [ { breed: "豹猫", stars: "⭐⭐⭐⭐⭐", personality: "精力极其充沛，喜欢跑酷和冒险。", reason: "你们是天生的狂野玩伴，它的体能刚好能跟上你四处折腾的步伐。" }, { breed: "橘猫", stars: "⭐⭐⭐⭐", personality: "心大，能吃能睡，抢食物第一名。", reason: "互补款。当你疯跑回来，看到随性的大橘，会觉得生活充满乐趣。" } ] },
+        "ESFP": { mbti_desc: "【表演者】活泼外向、乐观有趣、注重体验、真诚直接、讨厌沉闷。", cats: [ { breed: "德文卷毛猫", stars: "⭐⭐⭐⭐⭐", personality: "外表像小精灵，极度活泼亲人，爱撒娇。", reason: "家庭气氛组担当，能一直逗你开心，你们俩就是永不落幕的喜剧。" }, { breed: "暹罗猫", stars: "⭐⭐⭐⭐", personality: "戏精本精，嗓门极大，肢体语言丰富。", reason: "两只“显眼包”相遇，一起在家飙戏，快乐永远不打烊。" } ] }
+    };
+
+    const defaultData = {
+        mbti_desc: "你是一个独特且充满潜力的个体，拥有自己独一无二的性格闪光点。",
+        cats: [
+            { breed: "中华田园猫 (盲盒款)", stars: "⭐⭐⭐⭐⭐", personality: "性格百变，生命力顽强。", reason: "随缘相遇的猫咪才是真正的本命，它会用一生来爱上独特的你。" }
+        ]
+    };
+
+    // 动态渲染题目
+    const container = document.getElementById('questions-container');
+    questions.forEach((q, index) => {
+        let html = `
+            <div class="question-block">
+                <div class="question-text">
+                    <span>${questionIcons[index]}</span>
+                    <span>${index + 1}. ${q.text}</span>
+                </div>
+                <div class="options">
+        `;
+        
+        scaleConfig.forEach(scale => {
+            html += `
+                <label class="radio-label">
+                    <input type="radio" name="${q.id}" value="${scale.value}">
+                    <span class="cat-emoji">${scale.emoji}</span>
+                    <span class="score-text">${scale.label}</span>
+                </label>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+
+    // 计算结果逻辑
+    function calculateResult() {
+        if (!currentUser) {
+            alert("请先登录再提交测试喵！🐾");
+            document.getElementById('login-overlay').style.display = 'flex';
+            return;
+        }
+
+        let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+        let allAnswered = true;
+
+        questions.forEach(q => {
+            const selectedOption = document.querySelector(`input[name="${q.id}"]:checked`);
+            if (!selectedOption) {
+                allAnswered = false;
+                return;
+            }
+            const value = parseInt(selectedOption.value);
+            if (value === 5) scores[q.traitPos] += 2;
+            else if (value === 4) scores[q.traitPos] += 1;
+            else if (value === 2) scores[q.traitNeg] += 1;
+            else if (value === 1) scores[q.traitNeg] += 2;
+        });
+
+        if (!allAnswered) {
+            alert("喵呜~ 还有题目没选完哦，请把所有小猫咪都点亮吧！🐾");
+            return;
+        }
+
+        let mbti = "";
+        mbti += (scores['E'] >= scores['I']) ? "E" : "I";
+        mbti += (scores['S'] >= scores['N']) ? "S" : "N";
+        mbti += (scores['T'] >= scores['F']) ? "T" : "F";
+        mbti += (scores['J'] >= scores['P']) ? "J" : "P";
+
+        const resultData = catDatabase[mbti] || defaultData;
+        
+        document.getElementById('mbti-result').innerText = `✨ 你的 MBTI 是：${mbti} ✨`;
+        // 先加载本地默认描述
+        document.getElementById('mbti-desc').innerText = resultData.mbti_desc;
+        
+        const catsContainer = document.getElementById('cats-container');
+        catsContainer.innerHTML = ''; 
+        
+        resultData.cats.forEach(cat => {
+            catsContainer.innerHTML += `
+                <div class="cat-card">
+                    <div class="cat-header">
+                        <span class="cat-name">${cat.breed}</span>
+                        <span class="stars">${cat.stars}</span>
+                    </div>
+                    <div class="cat-trait"><span class="tag">猫咪性格</span> ${cat.personality}</div>
+                    <div class="match-reason"><span class="tag">匹配理由</span> ${cat.reason}</div>
+                </div>
+            `;
+        });
+        
+        const resultSection = document.getElementById('result-section');
+        resultSection.style.display = 'block';
+        setTimeout(() => {
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+
+        // 触发 AI 分析接口
+        if(resultData.cats.length > 0) {
+            getAIAnalysis(mbti, resultData.cats[0].breed);
+        }
+    }
+</script>
+
+</body>
+</html>
